@@ -4,6 +4,9 @@ import { RegisterView } from "./views/RegisterView";
 import { ProtectedRoute } from "./routes/protectedRoutes";
 import { VerifyEmailView } from "./views/VerifyEmailView";
 import { EmailSentNotificationView } from "./views/EmailSentNotificationView";
+import { LoginView } from "./views/LoginView";
+import { ForgotPasswordView } from "./views/ForgotPasswordView";
+import { ResetPasswordView } from "./views/ResetPasswordView";
 
 function App() {
   return (
@@ -13,20 +16,9 @@ function App() {
         <Route path="/register" element={<RegisterView />} />
         <Route path="/verify-email" element={<VerifyEmailView />} />
         <Route path="/email-sent" element={<EmailSentNotificationView />} />
-        <Route
-          path="/login"
-          element={
-            <div className="p-8 text-center">login View Placeholder</div>
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <div className="p-8 text-center">
-              Forgot Password View Placeholder
-            </div>
-          }
-        />
+        <Route path="/login" element={<LoginView />} />
+        <Route path="/forgot-password" element={<ForgotPasswordView />} />
+        <Route path="/reset-password" element={<ResetPasswordView />} />
 
         {/* 8. Secured Protected Application Ecosystem Routes */}
         <Route element={<ProtectedRoute />}>

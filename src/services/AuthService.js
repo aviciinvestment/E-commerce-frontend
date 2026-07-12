@@ -39,6 +39,7 @@ export const verifyEmailAPI = async (token, email) => {
 };
 
 export const loginUserAPI = async (email, password) => {
+  // Directly transmits your { email, password } request object
   const response = await authClient.post("/user_Auth/login", {
     email,
     password,
@@ -46,14 +47,29 @@ export const loginUserAPI = async (email, password) => {
   return response.data;
 };
 
-export const fetchUserProfileAPI = async () => {
-  const response = await authClient.get("/user_Auth/profile");
+// Add this export alongside your other API calls inside src/services/authService.js
+export const forgotPasswordAPI = async (email) => {
+  // Transmits exactly { email } matching your backend req.body.email requirement
+  const response = await authClient.post("/user_Auth/forgotpassword", {
+    email,
+  });
   return response.data;
 };
 
-export const forgotPasswordAPI = async (email) => {
-  const response = await authClient.post("/user_Auth/forgot-password", {
-    email,
-  });
+// Append this function inside your src/services/authService.js file
+export const resetPasswordAPI = async (
+  token,
+  email,
+  first_password,
+  second_password,
+) => {
+  // Directly transmits the exact keys expected by your backend req.body
+  const response = await authClient.post(
+    `/user_Auth/resetpassword?token=${token}&email=${email}`,
+    {
+      first_password,
+      second_password,
+    },
+  );
   return response.data;
 };

@@ -86,7 +86,7 @@ export const RegisterView = () => {
                   Password
                 </label>
                 <a
-                  href="/forgot-password"
+                  href="/forgotpassword"
                   className="text-xs text-indigo-600 hover:underline font-medium"
                 >
                   Forgot password?

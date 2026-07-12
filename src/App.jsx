@@ -7,6 +7,7 @@ import { EmailSentNotificationView } from "./views/EmailSentNotificationView";
 import { LoginView } from "./views/LoginView";
 import { ForgotPasswordView } from "./views/ForgotPasswordView";
 import { ResetPasswordView } from "./views/ResetPasswordView";
+import { DashboardView } from "./views/DashboardView";
 
 function App() {
   return (
@@ -22,14 +23,7 @@ function App() {
 
         {/* 8. Secured Protected Application Ecosystem Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route
-            path="/dashboard"
-            element={
-              <div className="p-8 text-center text-emerald-600 font-bold">
-                🎉 Welcome to your Protected Account User Dashboard Screen!
-              </div>
-            }
-          />
+          <Route path="/dashboard" element={<DashboardView />} />
           <Route
             path="/profile"
             element={

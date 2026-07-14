@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuthController } from "../contrloller/useAuthController";
+import { useAuthController } from "../controllers/useAuthController";
 import {
   Card,
   CardContent,

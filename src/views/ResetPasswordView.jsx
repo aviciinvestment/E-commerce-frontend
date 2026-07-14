@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useResetPasswordController } from "../contrloller/useResetPasswordController";
+import { useResetPasswordController } from "../controllers/useResetPasswordController";
 import {
   Card,
   CardContent,

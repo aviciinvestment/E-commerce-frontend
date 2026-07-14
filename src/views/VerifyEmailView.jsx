@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useVerifyEmailController } from "../contrloller/useVerifyEmailController";
+import { useVerifyEmailController } from "../controllers/useVerifyEmailController";
 import {
   Card,
   CardContent,

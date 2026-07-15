@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { ShoppingBag, ShoppingCart, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+// 1. Import your brand new Search Component
+import { GlobalSearchBar } from "./GlobalSearchBar";
 
 export const MainLayout = () => {
   const { pathname } = useLocation();
@@ -21,8 +23,11 @@ export const MainLayout = () => {
         >
           <ShoppingBag className="w-5 h-5 text-indigo-600" />
           <span>E-Store</span>
+          {/* ⚡ THE INTEGRATION: Placed cleanly in the middle of your global header wrapper */}
         </Link>
-
+        <div className="hidden md:block flex-1 max-w-md mx-8">
+          <GlobalSearchBar />
+        </div>
         {/* Navigation Center Paths Links */}
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
           <Link to="/" className="hover:text-indigo-600 transition-colors">

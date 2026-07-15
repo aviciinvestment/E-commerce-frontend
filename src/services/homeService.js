@@ -10,8 +10,8 @@ const homeClient = axios.create({
 export const fetchHomepagePayloadAPI = async () => {
   // Parallel resolution reads public inventories simultaneously
   const [categoriesRes, productsRes] = await Promise.all([
-    homeClient.get("/categories"),
-    homeClient.get("/products"),
+    homeClient.get("/api/categories"),
+    homeClient.get("/products/getAllProducts"),
   ]);
 
   const allProducts = productsRes.data.data || [];

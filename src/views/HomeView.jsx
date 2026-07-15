@@ -74,7 +74,7 @@ export const HomeView = () => {
 
       {/* PROMOTIONAL BANNERS */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-linear-to-r` from-amber-500 to-orange-600 rounded-xl p-6 text-white flex flex-col justify-between min-h-40 shadow-sm">
+        <div className="bg-linear-to-r from-amber-500 to-orange-600 rounded-xl p-6 text-white flex flex-col justify-between min-h-40 shadow-sm">
           <div className="space-y-1">
             <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold uppercase rounded-md shadow-none tracking-wider">
               Flash Incentive

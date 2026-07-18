@@ -1,17 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { ShoppingBag, ShoppingCart, User, Menu } from "lucide-react";
+import { ShoppingBag, ShoppingCart, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // 1. Import your brand new Search Component
 import { GlobalSearchBar } from "./GlobalSearchBar";
 
 export const MainLayout = () => {
   const { pathname } = useLocation();
+  // 3. State to control the mobile nav dropdown
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // 2. Automated Scroll To Top integration on routing state updates
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
+
+  const navLinks = [
+    { to: "/", label: "Home" },
+    { to: "/shop", label: "Catalog" },
+    { to: "/dashboard", label: "Dashboard" },
+  ];
+
+  // Helper so every mobile link closes the dropdown when clicked
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans antialiased">
@@ -30,17 +41,20 @@ export const MainLayout = () => {
         </div>
         {/* Navigation Center Paths Links */}
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-          <Link to="/" className="hover:text-indigo-600 transition-colors">
-            Home
-          </Link>
-          <Link to="/shop" className="hover:text-indigo-600 transition-colors">
-            Catalog
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="hover:text-indigo-600 transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
         {/* Navigation Right Action Panel Buttons */}
         <div className="flex items-center gap-2">
-          <Link to="/cart">
+          <Link to="/cart" onClick={closeMobileMenu}>
             <Button
               variant="ghost"
               size="icon"
@@ -51,7 +65,7 @@ export const MainLayout = () => {
             </Button>
           </Link>
 
-          <Link to="/login">
+          <Link to="/login" onClick={closeMobileMenu}>
             <Button
               variant="ghost"
               size="icon"
@@ -61,15 +75,46 @@ export const MainLayout = () => {
             </Button>
           </Link>
 
+          {/* 4. Toggle button now flips between Menu and X icons */}
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             className="md:hidden text-slate-600 h-9 w-9"
           >
-            <Menu className="w-4 h-4" />
+            {isMobileMenuOpen ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Menu className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </nav>
+
+      {/* 5. MOBILE DROPDOWN PANEL — only rendered on small screens when open */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden w-full bg-white border-b border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="px-4 sm:px-6 py-4 flex flex-col gap-1">
+            {/* Search bar inside the mobile dropdown too */}
+            <div className="mb-3">
+              <GlobalSearchBar />
+            </div>
+
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={closeMobileMenu}
+                className="px-3 py-2.5 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 2. THE DYNAMIC RESPONSIVE MAIN BODY CONTAINER */}
       <main className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-200">

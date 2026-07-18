@@ -1,96 +1,204 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { jwtDecode } from "jwt-decode";
 import {
   updateAccountProfileAPI,
   changeAccountPasswordAPI,
+  fetchUserAddressesAPI,
+  addUserAddressAPI,
+  updateUserAddressAPI,
   deleteUserAddressAPI,
-} from "../services/profileService";
+} from "../services/userService";
 import { toast } from "sonner";
 
-export const useProfileController = (initialUser, onRefreshData) => {
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
+export const useProfileController = () => {
+  const [loading, setLoading] = useState(true);
+  const [addresses, setAddresses] = useState([]);
+  const [profile, setProfile] = useState(null);
 
-  // Form states initialized safely from current user profile values
-  const [fullname, setFullname] = useState(initialUser?.fullname || "");
-  const [email, setEmail] = useState(initialUser?.email || "");
+  // Guard reference tracks network execution cycles to kill rendering loops completely
+  const hasExecutedRef = useRef(false);
 
+  // Overlay form tracking states
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
+
+  // Profile forms fields binding variables
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Update Personal Profile (Name & Email)
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-    if (!fullname || !email) return;
+  // Address inputs parameters tracking state map
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [country, setCountry] = useState("Nigeria");
 
-    setProfileLoading(true);
+  const getAuthenticatedUserId = () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
     try {
-      const res = await updateAccountProfileAPI(fullname.trim(), email.trim());
-      toast.success(res.message || "Profile parameters updated cleanly!");
-      if (onRefreshData) onRefreshData(); // Re-trigger main dashboard data pull
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to save profile changes.",
-      );
-    } finally {
-      setProfileLoading(false);
+      const decoded = jwtDecode(token);
+      return decoded.id || decoded._id;
+    } catch (e) {
+      console.log(e);
+      return null;
     }
   };
 
-  // Change Password Security configuration
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) return;
-
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match. Please re-enter.");
+  const syncAccountDataMatrix = async () => {
+    const userId = getAuthenticatedUserId();
+    if (!userId) {
+      setLoading(false);
       return;
     }
 
-    setPasswordLoading(true);
+    setLoading(true);
+    try {
+      const addrData = await fetchUserAddressesAPI(userId);
+      setAddresses(addrData.data || addrData || []);
+
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        const decoded = jwtDecode(token);
+        setProfile({
+          fullname: decoded.fullname || "Victory Chibuakunna",
+          email: decoded.email || "shopper@domain.com",
+        });
+        if (!fullname) setFullname(decoded.fullname || "");
+        if (!email) setEmail(decoded.email || "");
+      }
+    } catch (err) {
+      console.error("Account synchronization failure:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateInfoSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await updateAccountProfileAPI(fullname.trim(), email.trim());
+      toast.success(res.message || "Identity credentials updated.");
+      await syncAccountDataMatrix();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await changeAccountPasswordAPI(currentPassword, newPassword);
-      toast.success(
-        res.message || "Password credentials updated successfully!",
-      );
+      toast.success(res.message || "Passcode modified successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Password adjustment rejected.",
-      );
+      toast.error(err.response?.data?.message || "Passcode change rejected.");
     } finally {
-      setPasswordLoading(false);
+      setLoading(false);
     }
   };
 
-  // Delete Delivery Profile Address
-  const handleDeleteAddress = async (addressId) => {
+  const openAddressFormModal = (addr = null) => {
+    if (addr) {
+      setEditingAddressId(addr._id);
+      setStreet(addr.street || "");
+      setCity(addr.city || "");
+      setState(addr.state || "");
+      setZipCode(addr.zipCode || "");
+      setCountry(addr.country || "Nigeria");
+    } else {
+      setEditingAddressId(null);
+      setStreet("");
+      setCity("");
+      setState("");
+      setZipCode("");
+      setCountry("Nigeria");
+    }
+    setAddressModalOpen(true);
+  };
+
+  const handleSaveAddressSubmit = async (e) => {
+    e.preventDefault();
+    const userId = getAuthenticatedUserId();
+    const payload = { userId, street, city, state, zipCode, country };
+
+    setLoading(true);
     try {
-      await deleteUserAddressAPI(addressId);
-      toast.success("Shipping address purged from profile directory.");
-      if (onRefreshData) onRefreshData();
+      if (editingAddressId) {
+        await updateUserAddressAPI({ addressId: editingAddressId, ...payload });
+        toast.success("Shipping profile details updated.");
+      } else {
+        await addUserAddressAPI(payload);
+        toast.success("New shipping destination pinned.");
+      }
+      setAddressModalOpen(false);
+      await syncAccountDataMatrix();
     } catch (err) {
-      toast.error(`Failed to remove address${err}`);
+      console.log(err);
+      toast.error("Error writing address data parameters.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAddressTrigger = async (id) => {
+    try {
+      await deleteUserAddressAPI(id);
+      toast.success("Address erased completely.");
+      await syncAccountDataMatrix();
+    } catch (err) {
+      console.log(err);
+      toast.error("Deletion query rejected.");
     }
   };
 
   return {
+    loading,
+    addresses,
+    profile,
+    syncAccountDataMatrix,
+    hasExecutedRef, // ⚡ Added reference locks
     fullname,
     setFullname,
     email,
     setEmail,
-    profileLoading,
-    handleUpdateProfile,
+    handleUpdateInfoSubmit,
     currentPassword,
     setCurrentPassword,
     newPassword,
     setNewPassword,
     confirmPassword,
     setConfirmPassword,
-    passwordLoading,
-    handleChangePassword,
-    handleDeleteAddress,
+    handleChangePasswordSubmit,
+    street,
+    setStreet,
+    city,
+    setCity,
+    state,
+    setState,
+    zipCode,
+    setZipCode,
+    country,
+    setCountry,
+    addressModalOpen,
+    setAddressModalOpen,
+    editingAddressId,
+    openAddressFormModal,
+    handleSaveAddressSubmit,
+    handleDeleteAddressTrigger,
   };
 };

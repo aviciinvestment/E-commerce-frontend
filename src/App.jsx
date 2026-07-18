@@ -53,12 +53,10 @@ function App() {
             SECURED ECYOSYSTEM SUB-PATHS GUARD
             ───────────────────────────────────────────────────────── */}
         <Route element={<ProtectedRoute />}>
-          {/* Direct your protected sub-views through your layout shell */}
-          <Route path="/dashboard" element={<DashboardView />} />
-          <Route
-            path="/profile"
-            element={<div className="p-8">Customer Profile Section</div>}
-          />
+          <Route path="/" element={<MainLayout />}>
+            {/* Direct your protected sub-views through your layout shell */}
+            <Route path="/dashboard" element={<DashboardView />} />
+          </Route>
         </Route>
 
         {/* ⚡ FIXED: Safe catch-all fallback bounce gate redirects cleanly to homepage */}

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://e-commerce-backend-9wqm.onrender.com";
+const API_BASE_URL = "https://e-commerce-backend-9wqm.onrender.com/wishlist";
 
 const wishlistClient = axios.create({
   baseURL: API_BASE_URL,
@@ -15,30 +15,22 @@ wishlistClient.interceptors.request.use((config) => {
 
 // 18. ADD TO WISHLIST
 export const addToWishlistAPI = async (userId, productId) => {
-  const response = await wishlistClient.post("/wishlist/wishlist/add", {
+  const response = await wishlistClient.post("/wishlist/add", {
     userId,
     productId,
   });
   return response.data;
 };
 
-// 20. REMOVE FROM WISHLIST
 export const removeFromWishlistAPI = async (userId, productId) => {
-  const response = await wishlistClient.post("/wishlist/wishlist/remove", {
+  const response = await wishlistClient.post("/wishlist/remove", {
     userId,
     productId,
   });
   return response.data;
 };
 
-// 21. MOVE TO CART CROSS-HANDOFF PAYLOAD
-export const moveWishlistItemToCartAPI = async (userId, productId) => {
-  const response = await wishlistClient.post(
-    "/wishlist/wishlist/move-to-cart",
-    {
-      userId,
-      productId,
-    },
-  );
+export const getWishlistAPI = async (userId) => {
+  const response = await wishlistClient.get(`/wishlist/${userId}`);
   return response.data;
 };

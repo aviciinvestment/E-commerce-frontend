@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useCatalogController } from "../controllers/useCatalogController";
+import { useWishlistController } from "../controllers/useWishlistController";
+import { useCartController } from "../controllers/useCartController";
 import { ProductSkeleton } from "../components/custom/ProductSkeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +13,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
+  ShoppingCart,
+  Heart,
   SlidersHorizontal,
   DollarSign,
+  Loader2,
+  Check,
 } from "lucide-react";
 
 export const ShopView = () => {
@@ -27,6 +33,10 @@ export const ShopView = () => {
     updateFilters,
     handlePageChange,
   } = useCatalogController();
+
+  const { wishlistIds, wishlistBusyIds, toggleWishlist } =
+    useWishlistController();
+  const { cartBusyIds, cartAddedIds, addToCart } = useCartController();
 
   // Local state parameters to buffer fast keystroke input streams
   const [localSearch, setLocalSearch] = useState(searchFilter);
@@ -54,7 +64,6 @@ export const ShopView = () => {
           <span>Refine Product Discovery</span>
         </div>
 
-        {/* Text Keyword Search Box Form */}
         <form onSubmit={applySearchSubmit} className="space-y-2">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Search Keyword
@@ -71,7 +80,6 @@ export const ShopView = () => {
           </div>
         </form>
 
-        {/* Minimum and Maximum Price Boundaries Filter Inputs */}
         <form onSubmit={applyPriceBracketsSubmit} className="space-y-3">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Price Thresholds ($)
@@ -113,7 +121,6 @@ export const ShopView = () => {
           RIGHT COLUMN MAIN FEED: SORT BAR AND PRODUCT GRID MATRIX
           ───────────────────────────────────────────────────────── */}
       <section className="flex-1 w-full space-y-6">
-        {/* Dynamic Sort Controls header segment */}
         <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
             {products.length} matching inventory records found
@@ -132,7 +139,6 @@ export const ShopView = () => {
           </div>
         </div>
 
-        {/* Dynamic Render Feed */}
         {loading ? (
           <ProductSkeleton />
         ) : products.length === 0 ? (
@@ -142,85 +148,123 @@ export const ShopView = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((prod) => (
-              <Card
-                key={prod._id}
-                className="bg-white border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden group"
-              >
-                <CardContent className="p-4 space-y-3">
-                  {/* Product Image Frame Wrapper */}
-                  <div className="bg-slate-50 border border-slate-100/50 rounded-lg h-44 overflow-hidden flex items-center justify-center relative">
-                    {prod.images && prod.images.length > 0 ? (
-                      <img
-                        /* Reads index 0 out of your product's images allocation array string */
-                        src={
-                          Array.isArray(prod.images)
-                            ? prod.images[0]
-                            : prod.images
+            {products.map((prod) => {
+              const isWishlisted = wishlistIds.has(prod._id);
+              const isWishlistBusy = wishlistBusyIds.has(prod._id);
+              const isCartBusy = cartBusyIds.has(prod._id);
+              const justAdded = cartAddedIds.has(prod._id);
+              const outOfStock = prod.stockCount <= 0;
+
+              return (
+                <Card
+                  key={prod._id}
+                  className="bg-white border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden group"
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="bg-slate-50 border border-slate-100/50 rounded-lg h-44 overflow-hidden flex items-center justify-center relative">
+                      {prod.images && prod.images.length > 0 ? (
+                        <img
+                          src={
+                            Array.isArray(prod.images)
+                              ? prod.images[0]
+                              : prod.images
+                          }
+                          alt={prod.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-300 gap-1">
+                          <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            No Image Provided
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => toggleWishlist(prod._id)}
+                        disabled={isWishlistBusy}
+                        aria-label={
+                          isWishlisted
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
                         }
-                        alt={prod.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      /* Fallback placeholder visual icon if no Cloudinary link exists on that document row */
-                      <div className="flex flex-col items-center justify-center text-slate-300 gap-1">
-                        <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          No Image Provided
-                        </span>
-                      </div>
-                    )}
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 flex items-center justify-center shadow-sm hover:bg-white transition-colors disabled:opacity-60"
+                      >
+                        {isWishlistBusy ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                        ) : (
+                          <Heart
+                            className={`w-3.5 h-3.5 transition-colors ${
+                              isWishlisted
+                                ? "fill-red-500 text-red-500"
+                                : "text-slate-400"
+                            }`}
+                          />
+                        )}
+                      </button>
 
-                    {/* Stock warning ribbon overlay */}
-                    {prod.stockCount <= 0 && (
-                      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded shadow uppercase tracking-wide">
-                          Out of Stock
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                      {outOfStock && (
+                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+                          <span className="bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded shadow uppercase tracking-wide">
+                            Out of Stock
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Metadata and Price Tags stack blocks remain below */}
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-slate-800 truncate capitalize">
-                      {prod.name}
-                    </h4>
-                    <p className="text-[10px] font-mono text-slate-400 font-bold uppercase truncate">
-                      SKU: {prod.sku?.slice(-6)}
-                    </p>
-                  </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-slate-800 truncate capitalize">
+                        {prod.name}
+                      </h4>
+                      <p className="text-[10px] font-mono text-slate-400 font-bold uppercase truncate">
+                        SKU: {prod.sku?.slice(-6)}
+                      </p>
+                    </div>
 
-                  <div className="flex items-baseline justify-between pt-1">
-                    <span className="text-sm font-black text-indigo-600">
-                      ${prod.price}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="text-[9px] bg-slate-100 text-slate-500 rounded border-0 px-1.5 font-bold uppercase"
+                    <div className="flex items-baseline justify-between pt-1">
+                      <span className="text-sm font-black text-indigo-600">
+                        ${prod.price}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="text-[9px] bg-slate-100 text-slate-500 rounded border-0 px-1.5 font-bold uppercase"
+                      >
+                        {prod.stockCount > 0
+                          ? `${prod.stockCount} Available`
+                          : "Sold Out"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+
+                  <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => addToCart(prod._id)}
+                      disabled={outOfStock || isCartBusy}
+                      className="flex-1 h-8 text-xs bg-slate-900 text-white hover:bg-slate-800 font-medium transition-colors gap-1.5 disabled:opacity-60"
                     >
-                      {prod.stockCount > 0
-                        ? `${prod.stockCount} Available`
-                        : "Sold Out"}
-                    </Badge>
+                      {isCartBusy ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : justAdded ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" /> Added
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+                        </>
+                      )}
+                    </Button>
                   </div>
-                </CardContent>
-
-                <div className="p-2 bg-slate-50/50 border-t border-slate-100">
-                  <Button
-                    size="sm"
-                    className="w-full h-8 text-xs bg-slate-900 text-white hover:bg-slate-800 font-medium transition-colors"
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
 
-        {/* Dynamic Pagination Footer Control Elements */}
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-4">
             <Button

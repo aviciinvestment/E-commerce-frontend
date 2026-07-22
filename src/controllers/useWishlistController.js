@@ -1,54 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   addToWishlistAPI,
   removeFromWishlistAPI,
-  moveWishlistItemToCartAPI,
+  getWishlistAPI,
 } from "../services/wishlistService";
-import { toast } from "sonner";
+import { getUserId } from "../utils/getUserId";
 
-export const useWishlistController = (onRefreshDashboard) => {
-  const mockUserId = "60d5ec494a822211116b4321"; // Decoded from JWT in production
-  const [wishlistActionLoading, setWishlistActionLoading] = useState(false);
+export const useWishlistController = () => {
+  const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [wishlistBusyIds, setWishlistBusyIds] = useState(new Set());
 
-  // 18 & 20. TOGGLE WISHLIST STATE ENTRY
-  const handleToggleWishlist = async (productId, isFavored) => {
-    setWishlistActionLoading(true);
-    try {
-      if (isFavored) {
-        await removeFromWishlistAPI(mockUserId, productId);
-        toast.success("Purged from wishlist favorite tracks.");
-      } else {
-        await addToWishlistAPI(mockUserId, productId);
-        toast.success("Saved to personal interest wishlist!");
+  // Fetch the user's existing wishlist once, so hearts render correctly filled in
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) return;
+
+    const fetchWishlist = async () => {
+      try {
+        const json = await getWishlistAPI(userId);
+        const list = json.data?.products || json.products || [];
+        const ids = new Set(
+          list.map((p) => (typeof p === "string" ? p : p._id)),
+        );
+        setWishlistIds(ids);
+      } catch (err) {
+        console.error("Failed to load wishlist", err);
       }
-      if (onRefreshDashboard) await onRefreshDashboard(); // Re-sync data grids
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Wishlist transaction rejected.",
-      );
-    } finally {
-      setWishlistActionLoading(false);
-    }
-  };
+    };
 
-  // 21. MOVE WISHLIST ITEM TO CART PIPELINE
-  const handleMoveToCart = async (productId) => {
-    setWishlistActionLoading(true);
-    try {
-      const res = await moveWishlistItemToCartAPI(mockUserId, productId);
-      toast.success(
-        res.message || "Cargo allocation moved to shopping cart cleanly!",
-      );
-      if (onRefreshDashboard) await onRefreshDashboard();
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to transfer item to cart basket.",
-      );
-    } finally {
-      setWishlistActionLoading(false);
-    }
-  };
+    fetchWishlist();
+  }, []);
 
-  return { handleToggleWishlist, handleMoveToCart, wishlistActionLoading };
+  const toggleWishlist = useCallback(
+    async (productId) => {
+      const userId = getUserId();
+      if (!userId) {
+        alert("Please log in to save items to your wishlist.");
+        return;
+      }
+
+      const isWishlisted = wishlistIds.has(productId);
+
+      setWishlistBusyIds((prev) => new Set(prev).add(productId));
+      // Optimistic update
+      setWishlistIds((prev) => {
+        const next = new Set(prev);
+        isWishlisted ? next.delete(productId) : next.add(productId);
+        return next;
+      });
+
+      try {
+        const json = isWishlisted
+          ? await removeFromWishlistAPI(userId, productId)
+          : await addToWishlistAPI(userId, productId);
+        if (!json.success)
+          throw new Error(json.message || "Wishlist update failed");
+      } catch (err) {
+        console.error(err);
+        // Roll back on failure
+        setWishlistIds((prev) => {
+          const next = new Set(prev);
+          isWishlisted ? next.add(productId) : next.delete(productId);
+          return next;
+        });
+      } finally {
+        setWishlistBusyIds((prev) => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
+      }
+    },
+    [wishlistIds],
+  );
+
+  return { wishlistIds, wishlistBusyIds, toggleWishlist };
 };

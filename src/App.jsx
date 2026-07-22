@@ -14,14 +14,12 @@ import { ShopView } from "./views/ShopView"; // ⚡ Import the clean view file
 import { DashboardView } from "./views/DashboardView";
 
 import { ProductDetailView } from "./views/ProductDetailView"; // ⚡ Import the clean view file
+import { CartView } from "./views/CartView";
+import { WishlistView } from "./views/WishlistView";
+
+// ...inside your <Routes>
 
 // Easy view placeholders for your dynamic layout child nodes
-
-const CartPlaceholder = () => (
-  <div className="p-8 text-center bg-white border rounded-xl shadow-sm">
-    🛒 Active Shopping Cart Checkout Ledger
-  </div>
-);
 
 function App() {
   return (
@@ -39,7 +37,7 @@ function App() {
           <Route path="shop" element={<ShopView />} />
 
           <Route path="product/:productId" element={<ProductDetailView />} />
-          <Route path="cart" element={<CartPlaceholder />} />
+
           {/* Public Auth Pathways */}
           <Route path="register" element={<RegisterView />} />
           <Route path="verify-email" element={<VerifyEmailView />} />
@@ -56,6 +54,8 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             {/* Direct your protected sub-views through your layout shell */}
             <Route path="/dashboard" element={<DashboardView />} />
+            <Route path="/cart" element={<CartView />} />
+            <Route path="/wishlist" element={<WishlistView />} />
           </Route>
         </Route>
 

@@ -19,6 +19,7 @@ export const MainLayout = () => {
     { to: "/", label: "Home" },
     { to: "/shop", label: "Catalog" },
     { to: "/dashboard", label: "Dashboard" },
+    { to: "/wishlist", label: "wishlist" },
   ];
 
   // Helper so every mobile link closes the dropdown when clicked

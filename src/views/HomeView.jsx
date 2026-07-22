@@ -16,6 +16,61 @@ import {
   Layers3,
 } from "lucide-react";
 
+// --- Lightweight skeleton primitives -----------------------------------
+const Skeleton = ({ className = "" }) => (
+  <div className={`animate-pulse bg-slate-200/70 rounded-md ${className}`} />
+);
+
+const CategorySkeleton = () => (
+  <Card className="bg-white border-slate-200">
+    <CardContent className="p-4 flex flex-col items-center justify-center gap-2 min-h-25">
+      <Skeleton className="w-5 h-5 rounded-full" />
+      <Skeleton className="h-3 w-16" />
+    </CardContent>
+  </Card>
+);
+
+const FlashSaleSkeleton = () => (
+  <Card className="bg-white border-red-100 shadow-sm overflow-hidden flex flex-col justify-between">
+    <CardContent className="p-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-16 rounded" />
+        <Skeleton className="h-3 w-10 rounded" />
+      </div>
+      <Skeleton className="h-4 w-3/4" />
+      <div className="flex items-baseline gap-2">
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-3 w-10" />
+      </div>
+    </CardContent>
+    <div className="p-2 bg-red-50/40 border-t border-red-50">
+      <Skeleton className="h-8 w-full rounded" />
+    </div>
+  </Card>
+);
+
+const FeaturedSkeleton = () => (
+  <Card className="bg-white border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden">
+    <CardContent className="p-4 space-y-2">
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-4 w-12" />
+    </CardContent>
+    <div className="p-2 bg-slate-50">
+      <Skeleton className="h-8 w-full rounded" />
+    </div>
+  </Card>
+);
+
+const ProductRowSkeleton = () => (
+  <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+    <div className="min-w-0 max-w-[70%] w-full space-y-1.5">
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-2.5 w-1/3" />
+    </div>
+    <Skeleton className="h-3 w-10 shrink-0" />
+  </div>
+);
+
 export const HomeView = () => {
   const { homeData, loading, handleNewsletterSubscribe, newsLoading } =
     useHomeController();
@@ -23,19 +78,14 @@ export const HomeView = () => {
   const navigate = useNavigate();
   const [flashSaleEndTime] = useState(() => Date.now() + 1000 * 60 * 60 * 4);
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-2">
-        <div className="w-6 h-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Loading Marketplace Experience...
-        </p>
-      </div>
-    );
-  }
-
-  const { categories, featured, newArrivals, bestSellers, flashSale } =
-    homeData;
+  // Safe defaults so we can render the shell before data actually arrives
+  const {
+    categories = [],
+    featured = [],
+    newArrivals = [],
+    bestSellers = [],
+    flashSale = [],
+  } = homeData || {};
 
   const onNewsletterSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +96,7 @@ export const HomeView = () => {
 
   return (
     <div className="w-full space-y-16 pb-12 antialiased">
-      {/* HOMEPAGE HERO SECTION */}
+      {/* HOMEPAGE HERO SECTION — always rendered instantly, no data dependency */}
       <section className="relative rounded-2xl overflow-hidden bg-slate-900 text-white min-h-105 flex items-center px-6 md:px-12 shadow-xl border border-slate-800">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-900/40 via-slate-900 to-slate-900 -z-10" />
         <div className="max-w-xl space-y-6">
@@ -72,7 +122,7 @@ export const HomeView = () => {
         </div>
       </section>
 
-      {/* PROMOTIONAL BANNERS */}
+      {/* PROMOTIONAL BANNERS — static content, always rendered */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-linear-to-r from-amber-500 to-orange-600 rounded-xl p-6 text-white flex flex-col justify-between min-h-40 shadow-sm">
           <div className="space-y-1">
@@ -126,7 +176,13 @@ export const HomeView = () => {
             Browse Categories
           </h2>
         </div>
-        {categories.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CategorySkeleton key={i} />
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
           <p className="text-xs text-slate-400 font-medium">
             No system categories deployed yet.
           </p>
@@ -168,20 +224,17 @@ export const HomeView = () => {
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Expires In:
             </span>
-            {/* ⚡ THE COMPLETE FIXED COUNTDOWN DOM ELEMENT BLOCK ⚡ */}
-            <div className="flex items-center gap-2 pt-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Expires In:
-              </span>
-              <div className="font-mono text-base font-bold text-red-600 bg-white border border-red-200 px-3 py-1 rounded-md shadow-sm">
-                {/* ✅ Good: Swapped out Date.now() for our stable flashSaleEndTime state variable */}
-                <Countdown date={flashSaleEndTime} />
-              </div>
+            <div className="font-mono text-base font-bold text-red-600 bg-white border border-red-200 px-3 py-1 rounded-md shadow-sm">
+              <Countdown date={flashSaleEndTime} />
             </div>
           </div>
         </div>
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {flashSale.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 2 }).map((_, i) => (
+              <FlashSaleSkeleton key={i} />
+            ))
+          ) : flashSale.length === 0 ? (
             <div className="sm:col-span-2 text-center py-6 text-xs text-slate-400 font-medium">
               Clearance lines tracking empty currently.
             </div>
@@ -225,36 +278,41 @@ export const HomeView = () => {
           )}
         </div>
       </section>
+
       {/* FEATURED PRODUCTS SHOWCASES */}
       <section className="space-y-4">
         <h3 className="text-lg font-bold tracking-tight text-slate-900 border-b border-slate-100 pb-2">
           Featured Showcases
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {featured.map((prod) => (
-            <Card
-              key={prod._id}
-              className="bg-white border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden"
-            >
-              <CardContent className="p-4 space-y-2">
-                <h4 className="text-xs font-bold text-slate-800 truncate">
-                  {prod.name}
-                </h4>
-                <p className="text-xs font-black text-indigo-600">
-                  ${prod.price ? prod.price.toFixed(2) : "0.00"}
-                </p>
-              </CardContent>
-              <div className="p-2 bg-slate-50">
-                <Button
-                  onClick={() => navigate("/shop")}
-                  variant="outline"
-                  className="w-full h-8 text-xs border-slate-200 text-slate-700 hover:bg-white"
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <FeaturedSkeleton key={i} />
+              ))
+            : featured.map((prod) => (
+                <Card
+                  key={prod._id}
+                  className="bg-white border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden"
                 >
-                  Inspect Asset
-                </Button>
-              </div>
-            </Card>
-          ))}
+                  <CardContent className="p-4 space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800 truncate">
+                      {prod.name}
+                    </h4>
+                    <p className="text-xs font-black text-indigo-600">
+                      ${prod.price ? prod.price.toFixed(2) : "0.00"}
+                    </p>
+                  </CardContent>
+                  <div className="p-2 bg-slate-50">
+                    <Button
+                      onClick={() => navigate("/shop")}
+                      variant="outline"
+                      className="w-full h-8 text-xs border-slate-200 text-slate-700 hover:bg-white"
+                    >
+                      Inspect Asset
+                    </Button>
+                  </div>
+                </Card>
+              ))}
         </div>
       </section>
 
@@ -266,26 +324,30 @@ export const HomeView = () => {
             Fresh Arrivals
           </h3>
           <div className="space-y-3">
-            {newArrivals.map((prod) => (
-              <div
-                key={prod._id}
-                className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm hover:border-slate-300 transition-colors"
-              >
-                <div className="min-w-0 max-w-[70%]">
-                  <h4 className="text-xs font-bold text-slate-800 truncate">
-                    {prod.name}
-                  </h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    SKU code: {prod.sku || "N/A"}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-slate-900">
-                    ${prod.price}
-                  </span>
-                </div>
-              </div>
-            ))}
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <ProductRowSkeleton key={i} />
+                ))
+              : newArrivals.map((prod) => (
+                  <div
+                    key={prod._id}
+                    className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm hover:border-slate-300 transition-colors"
+                  >
+                    <div className="min-w-0 max-w-[70%]">
+                      <h4 className="text-xs font-bold text-slate-800 truncate">
+                        {prod.name}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        SKU code: {prod.sku || "N/A"}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-slate-900">
+                        ${prod.price}
+                      </span>
+                    </div>
+                  </div>
+                ))}
           </div>
         </div>
 
@@ -295,32 +357,36 @@ export const HomeView = () => {
             Highest Trailing / Best Sellers
           </h3>
           <div className="space-y-3">
-            {bestSellers.map((prod) => (
-              <div
-                key={prod._id}
-                className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm hover:border-slate-300 transition-colors"
-              >
-                <div className="min-w-0 max-w-[70%]">
-                  <h4 className="text-xs font-bold text-slate-800 truncate">
-                    {prod.name}
-                  </h4>
-                  <p className="text-[10px] font-medium text-emerald-600 mt-0.5">
-                    ⭐ {prod.averageRating || "4.5"} ({prod.reviewCount || "0"}{" "}
-                    reviews)
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-slate-900">
-                    ${prod.price}
-                  </span>
-                </div>
-              </div>
-            ))}
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <ProductRowSkeleton key={i} />
+                ))
+              : bestSellers.map((prod) => (
+                  <div
+                    key={prod._id}
+                    className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm hover:border-slate-300 transition-colors"
+                  >
+                    <div className="min-w-0 max-w-[70%]">
+                      <h4 className="text-xs font-bold text-slate-800 truncate">
+                        {prod.name}
+                      </h4>
+                      <p className="text-[10px] font-medium text-emerald-600 mt-0.5">
+                        ⭐ {prod.averageRating || "4.5"} (
+                        {prod.reviewCount || "0"} reviews)
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-slate-900">
+                        ${prod.price}
+                      </span>
+                    </div>
+                  </div>
+                ))}
           </div>
         </div>
       </section>
 
-      {/* NEWSLETTER SUBSCRIPTION CAMPAIGN PANEL */}
+      {/* NEWSLETTER SUBSCRIPTION CAMPAIGN PANEL — static, always rendered */}
       <section className="bg-indigo-900 text-white rounded-2xl p-6 sm:p-10 shadow-lg border border-indigo-950 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,var(--tw-gradient-stops))] from-indigo-800 via-indigo-900 to-slate-900 -z-10" />
         <div className="space-y-2 max-w-md">

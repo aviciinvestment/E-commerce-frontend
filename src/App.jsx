@@ -20,6 +20,7 @@ import { OrderConfirmationView } from "./views/OrderConfirmationView";
 import { CheckoutView } from "./views/CheckoutView";
 import { OrderHistoryView } from "./views/OrderHistoryView";
 import { OrderDetailsView } from "./views/OrderDetailsView";
+import { ProductDetailsView } from "./views/ProductDetailsView";
 
 // ...inside your <Routes>
 
@@ -68,6 +69,10 @@ function App() {
 
             <Route path="/orders" element={<OrderHistoryView />} />
             <Route path="/orders/:orderId" element={<OrderDetailsView />} />
+            <Route
+              path="/products/:productId"
+              element={<ProductDetailsView />}
+            />
           </Route>
         </Route>
 

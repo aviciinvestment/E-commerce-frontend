@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useCatalogController } from "../controllers/useCatalogController";
 import { useWishlistController } from "../controllers/useWishlistController";
 import { useCartController } from "../controllers/useCartController";
@@ -259,6 +260,14 @@ export const ShopView = () => {
                       )}
                     </Button>
                   </div>
+                  <h4 className="text-xs font-bold text-center text-slate-800 truncate capitalize">
+                    <Link
+                      to={`/products/${prod._id}`}
+                      className="hover:text-indigo-600"
+                    >
+                      Expand Product View
+                    </Link>
+                  </h4>
                 </Card>
               );
             })}

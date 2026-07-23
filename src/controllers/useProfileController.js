@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import {
+  fetchUserProfileAPI,
   updateAccountProfileAPI,
   changeAccountPasswordAPI,
   fetchUserAddressesAPI,
@@ -57,18 +58,22 @@ export const useProfileController = () => {
 
     setLoading(true);
     try {
-      const addrData = await fetchUserAddressesAPI(userId);
+      const [addrData, profileData] = await Promise.all([
+        fetchUserAddressesAPI(userId),
+        fetchUserProfileAPI(),
+      ]);
+
       setAddresses(addrData.data || addrData || []);
 
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        const decoded = jwtDecode(token);
+      if (profileData.success) {
+        const user = profileData.data;
         setProfile({
-          fullname: decoded.fullname || "Victory Chibuakunna",
-          email: decoded.email || "shopper@domain.com",
+          fullname: user.fullname || "",
+          email: user.email || "",
+          createdAt: user.createdAt,
         });
-        if (!fullname) setFullname(decoded.fullname || "");
-        if (!email) setEmail(decoded.email || "");
+        setFullname(user.fullname || "");
+        setEmail(user.email || "");
       }
     } catch (err) {
       console.error("Account synchronization failure:", err.message);
@@ -171,7 +176,7 @@ export const useProfileController = () => {
     addresses,
     profile,
     syncAccountDataMatrix,
-    hasExecutedRef, // ⚡ Added reference locks
+    hasExecutedRef,
     fullname,
     setFullname,
     email,

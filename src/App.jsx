@@ -16,6 +16,10 @@ import { DashboardView } from "./views/DashboardView";
 import { ProductDetailView } from "./views/ProductDetailView"; // ⚡ Import the clean view file
 import { CartView } from "./views/CartView";
 import { WishlistView } from "./views/WishlistView";
+import { OrderConfirmationView } from "./views/OrderConfirmationView";
+import { CheckoutView } from "./views/CheckoutView";
+import { OrderHistoryView } from "./views/OrderHistoryView";
+import { OrderDetailsView } from "./views/OrderDetailsView";
 
 // ...inside your <Routes>
 
@@ -56,6 +60,14 @@ function App() {
             <Route path="/dashboard" element={<DashboardView />} />
             <Route path="/cart" element={<CartView />} />
             <Route path="/wishlist" element={<WishlistView />} />
+            <Route path="/checkout" element={<CheckoutView />} />
+            <Route
+              path="/checkout/success"
+              element={<OrderConfirmationView />}
+            />
+
+            <Route path="/orders" element={<OrderHistoryView />} />
+            <Route path="/orders/:orderId" element={<OrderDetailsView />} />
           </Route>
         </Route>
 

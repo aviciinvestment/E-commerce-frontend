@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import { useCartPageController } from "../controllers/useCartPageController";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -170,9 +171,11 @@ export const CartView = () => {
             </CardContent>
           </Card>
 
-          <Button className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-xl shadow-none">
-            Proceed to Checkout
-          </Button>
+          <Link to="/checkout" className="block">
+            <Button className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-xl shadow-none">
+              Proceed to Checkout
+            </Button>
+          </Link>
         </>
       )}
     </div>

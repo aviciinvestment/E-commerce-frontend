@@ -53,6 +53,12 @@ export const deleteUserAddressAPI = async (addressId) => {
   return response.data;
 };
 
+// Fetch the logged-in user's profile matching: GET /user_Auth/profile
+export const fetchUserProfileAPI = async () => {
+  const response = await authClient.get("profile");
+  return response.data;
+};
+
 // Profile details updates matching: PUT /user_Auth/profile/update
 export const updateAccountProfileAPI = async (fullname, email) => {
   const response = await authClient.put("profile/update", { fullname, email });
